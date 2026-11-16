@@ -24,7 +24,8 @@ set -euo pipefail
 #   psx                                                           (PlayStation)
 #   arcade fbneo neogeo mame2003 cps1 cps2                        (arcade)
 #   ports                                                         (PortMaster)
-KEEP_SYSTEMS="gb gbc gba sgb retroarch"
+# Quote names that contain a space, e.g. "Sega Atomiswave".
+KEEP_SYSTEMS=(gb gbc gba sgb retroarch)
 
 # Default GBA core: mGBA is accurate and emulates the cartridge real-time
 # clock (Pokemon Ruby/Sapphire/Emerald berries, tides, events).
@@ -111,23 +112,26 @@ DELETE_RULES=(
 
 keeps() {
   local s
-  for s in $KEEP_SYSTEMS; do [[ "$s" == "$1" ]] && return 0; done
+  for s in "${KEEP_SYSTEMS[@]}"; do [[ "$s" == "$1" ]] && return 0; done
   return 1
 }
 
 any_kept() {
-  # $1: comma separated system names (names may contain spaces)
-  local IFS=','
+  # $1: comma separated system names (names may contain spaces).
+  # Split with read so IFS=',' does not leak into keeps(): bash locals are
+  # dynamically scoped and keeps() would then split KEEP_SYSTEMS on commas.
+  local -a names
   local s
-  for s in $1; do keeps "$s" && return 0; done
+  IFS=',' read -r -a names <<< "$1"
+  for s in "${names[@]}"; do keeps "$s" && return 0; done
   return 1
 }
 
 filter_es_systems() {
   local cfg="$1"
-  python3 - "$cfg" "$KEEP_SYSTEMS" "$GBA_DEFAULT_CORE" <<'PY'
+  python3 - "$cfg" "$GBA_DEFAULT_CORE" "${KEEP_SYSTEMS[@]}" <<'PY'
 import re, sys
-path, keep, gba_core = sys.argv[1], set(sys.argv[2].split()), sys.argv[3]
+path, gba_core, keep = sys.argv[1], sys.argv[2], set(sys.argv[3:])
 with open(path, encoding="utf-8") as f:
     text = f.read()
 block = re.compile(r"[ \t]*<system>.*?</system>[ \t]*\r?\n?", re.S)
@@ -163,7 +167,9 @@ PY
 apply() {
   local root="${1:?usage: $0 apply <root>}"
   [[ -d "$root/etc" ]] || { echo "[rgb20s_trim] not a root tree: $root" >&2; return 1; }
-  echo "== RGB20S trim: keep [$KEEP_SYSTEMS] =="
+  # Never trim the build host itself
+  [[ "$(cd "$root" && pwd -P)" != "/" ]] || { echo "[rgb20s_trim] refusing to trim /" >&2; return 1; }
+  echo "== RGB20S trim: keep [${KEEP_SYSTEMS[*]}] =="
 
   local cfg
   for cfg in "$root"/etc/emulationstation/es_systems.cfg{,.dual,.sd1,.sd2}; do
