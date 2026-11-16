@@ -720,10 +720,21 @@ main() {
 
   # 前置检查 (不需要 root)
   check_tools
-  check_jdk_file
-  check_portmaster
-  check_pm_libs
-  check_install_portmaster
+  # Personal RGB20S trim: skip the J2ME JDK and PortMaster (~1.6 GB) downloads
+  # when scripts/rgb20s_trim.sh drops those systems. RGB20S_TRIM=0 skips the trim.
+  local trim="$SCRIPT_DIR/scripts/rgb20s_trim.sh"
+  if [[ "${RGB20S_TRIM:-1}" != 0 && "$ARKOS_IMAGE_NAME" == *dArkOS* ]] && ! bash "$trim" keeps j2me; then
+    log_info "RGB20S trim: j2me dropped, skipping JDK download"
+  else
+    check_jdk_file
+  fi
+  if [[ "${RGB20S_TRIM:-1}" != 0 && "$ARKOS_IMAGE_NAME" == *dArkOS* ]] && ! bash "$trim" keeps ports; then
+    log_info "RGB20S trim: ports dropped, skipping PortMaster downloads"
+  else
+    check_portmaster
+    check_pm_libs
+    check_install_portmaster
+  fi
   check_clone_dependencies
 
   # 需要 root 的检查

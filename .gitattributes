@@ -1,3 +1,11 @@
+# This repo is a byte-exact overlay of a Linux root filesystem. Never let git
+# convert line endings by default: on a Windows checkout with core.autocrlf=true
+# extensionless scripts (perfmax, switch-kernel, rk817-calibrationd, ...),
+# systemd units and modules.* index files were written with CRLF, which breaks
+# them on the device if the image is built from that checkout.
+# The rules below still force LF for the listed text types.
+* -text
+
 *.sh text eol=lf
 
 *.go text eol=lf

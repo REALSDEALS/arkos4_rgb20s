@@ -295,6 +295,15 @@ if [[ "$ARKOS_IMAGE_NAME" == *dArkOS* ]]; then
 
   echo "== sync rootfs/dArkOS =="
   sync_rootfs dArkOS 1000:1000
+
+  # Personal RGB20S trim (scripts/rgb20s_trim.sh); RGB20S_TRIM=0 skips it
+  if [[ "${RGB20S_TRIM:-1}" != 0 ]]; then
+    fatal bash "$SCRIPT_DIR/scripts/rgb20s_trim.sh" apply "$MOUNT_DIR/root"
+    if ! bash "$SCRIPT_DIR/scripts/rgb20s_trim.sh" keeps ports; then
+      safe sudo rm -rf "$MOUNT_DIR/roms/tools/PortMaster" "$MOUNT_DIR/roms/tools/PortMaster.sh" \
+        "$MOUNT_DIR/roms/tools/Install.PortMaster.sh" "$MOUNT_DIR/roms/ports"
+    fi
+  fi
   pack_roms_tar
 
   echo "== 清理 dArkOS 不需要的文件 =="

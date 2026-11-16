@@ -104,6 +104,11 @@ if [[ "$ARKOS_IMAGE_NAME" == *dArkOS* ]]; then
     --exclude='/home/ark/.config/retroarch*/cores/*mame*' \
     rootfs/dArkOS/ "$PAYLOAD_ROOT/"
 
+  # Personal RGB20S trim (scripts/rgb20s_trim.sh); RGB20S_TRIM=0 skips it
+  if [[ "${RGB20S_TRIM:-1}" != 0 ]]; then
+    bash scripts/rgb20s_trim.sh apply "$PAYLOAD_ROOT"
+  fi
+
 else
   # ============================================================
   # ArkOS (UID=1002)：先 dArkOS 后 ArkOS 分层覆盖
