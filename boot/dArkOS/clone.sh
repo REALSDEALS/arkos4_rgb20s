@@ -42,6 +42,9 @@ SDL3_VERSION="libSDL3.so.0.4.16"
 detect_device() {
   if [[ -x "$CONSOLE_DETECT" ]]; then
     eval "$("$CONSOLE_DETECT" -s)"
+    # RGB20S: use Select as the hotkey (Select+Start exits, as in stock ArkOS)
+    # instead of the F5 button console_detect assigns
+    [[ "$DEVICE_NAME" == "rgb20s" ]] && HOTKEY_TYPE="select"
     msg "Device: $DEVICE_NAME, ${SCREEN_WIDTH}x${SCREEN_HEIGHT}, joy=$JOYSTICK_COUNT, hotkey=$HOTKEY_TYPE, rot=$SCREEN_ROTATION, led=$LED_TYPE"
   else
     warn "console_detect not found, using defaults"
@@ -451,6 +454,7 @@ main() {
       # 重新检测设备信息（因为设备变了）
       if [[ -x "$CONSOLE_DETECT" ]]; then
         eval "$("$CONSOLE_DETECT" -s)"
+        [[ "$DEVICE_NAME" == "rgb20s" ]] && HOTKEY_TYPE="select"
         msg "Re-detected: $DEVICE_NAME, ${SCREEN_WIDTH}x${SCREEN_HEIGHT}, joy=$JOYSTICK_COUNT, hotkey=$HOTKEY_TYPE, rot=$SCREEN_ROTATION, led=$LED_TYPE"
       fi
     else
